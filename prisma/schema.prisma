@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Agent {
+  id              Int              @id @default(autoincrement())
+  name            String
+  email           String?
+  player          Player?
+  referee         Referee?
+  coach           Coach?
+  manager         Manager?
+  official        Official?
+  physiotherapist Physiotherapist?
+  fitnessCoach    FitnessCoach?
+
+  @@map("agents")
+}
+
+model Player {
+  agentId         Int    @id @map("agent_id")
+  clubInitials    String @map("club_initials")
+  teamDesignation String @map("team_designation")
+  agent           Agent  @relation(fields: [agentId], references: [id])
+  team            Team   @relation(fields: [teamDesignation, clubInitials], references: [designation, clubInitials])
+
+  @@map("players")
+}
+
+model Referee {
+  agentId      Int     @id @map("agent_id")
+  clubInitials String? @map("club_initials")
+  agent        Agent   @relation(fields: [agentId], references: [id])
+  club         Club?   @relation(fields: [clubInitials], references: [initials])
+
+  @@map("referees")
+}
+
+model Coach {
+  agentId Int    @id @map("agent_id")
+  agent   Agent  @relation(fields: [agentId], references: [id])
+  teams   Team[]
+
+  @@map("coaches")
+}
+
+model Manager {
+  agentId Int    @id @map("agent_id")
+  agent   Agent  @relation(fields: [agentId], references: [id])
+  clubs   Club[]
+
+  @@map("managers")
+}
+
+model Official {
+  agentId Int   @id @map("agent_id")
+  agent   Agent @relation(fields: [agentId], references: [id])
+
+  @@map("officials")
+}
+
+model Physiotherapist {
+  agentId Int    @id @map("agent_id")
+  agent   Agent  @relation(fields: [agentId], references: [id])
+  clubs   Club[]
+
+  @@map("physiotherapists")
+}
+
+model FitnessCoach {
+  agentId Int    @id @map("agent_id")
+  agent   Agent  @relation(fields: [agentId], references: [id])
+  clubs   Club[]
+
+  @@map("fitness_coaches")
+}
+
+model Club {
+  initials         String            @id
+  name             String            @unique
+  teams            Team[]
+  referees         Referee[]
+  managers         Manager[]
+  physiotherapists Physiotherapist[]
+  fitnessCoaches   FitnessCoach[]
+
+  @@map("clubs")
+}
+
+model Team {
+  id           String   @id @default(uuid())
+  designation  String
+  clubInitials String   @map("club_initials")
+  club         Club     @relation(fields: [clubInitials], references: [initials])
+  players      Player[]
+  coach        Coach[]
+
+  @@unique([designation, clubInitials])
+  @@map("teams")
+}
